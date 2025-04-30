@@ -43,7 +43,7 @@ pip install -r requirements.txt
 # 🔑 Environment Variables (.env)
 Create a .env file in the root directory:
 ```.env
-OPENAI_API_KEY=your_openai_key_here
+GROQ_API_KEY=your_groq_key_here
 APIFY_API_KEY=your_apify_key_here
 ```
 
