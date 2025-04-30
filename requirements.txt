@@ -5,3 +5,4 @@ pandas
 apify-client
 python-dotenv
 PyMuPDF
+langchain

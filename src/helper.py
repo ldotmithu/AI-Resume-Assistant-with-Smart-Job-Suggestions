@@ -26,7 +26,7 @@ def ask_llm(prompt):
         ],
         temperature=0.5,
         max_tokens=500,
-        model = 'meta-llama/llama-4-scout-17b-16e-instruct'
+        model = 'llama3-70b-8192'
     )
     return responce.choices[0].message.content
 
