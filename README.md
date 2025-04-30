@@ -51,6 +51,9 @@ APIFY_API_KEY=your_apify_key_here
 ```bash
 streamlit run main.py
 ```
+# ✨ Demo
+[▶️ Click here to watch the demo](https://github.com/ldotmithu/Dataset/blob/main/resume.gif)
+
 
 
 
