@@ -1,0 +1,7 @@
+streamlit
+fitz
+groq
+pandas
+apify-client
+python-dotenv
+PyMuPDF
