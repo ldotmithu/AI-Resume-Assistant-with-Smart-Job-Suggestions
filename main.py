@@ -1,5 +1,5 @@
 import streamlit as st 
-from src.helper import read_pdf_extract_text, ask_llm, getdata_from_GoogleJob, getdata_from_JobScan_AI
+from src.helper import extract_text_from_pdf, ask_llm, fetch_linkedin_jobs, fetch_naukri_jobs
 
 # Page configuration
 st.set_page_config('AI Resume Analyzier + Job Finder',layout="wide")
@@ -11,7 +11,7 @@ file = st.file_uploader('Upload your resume (PDF)', type=['pdf'])
 
 if file:
     with st.spinner('📚 Extracting text from resume...'):
-        text = read_pdf_extract_text(pdf_file=file)
+        text = extract_text_from_pdf(uploaded_file=file)
     
     with st.spinner('✍️ Summarizing the resume...'):
         summary = ask_llm(prompt=f"Summarize this resume highlighting skills, education, and experience:\n\n{text}")
@@ -40,8 +40,8 @@ if file:
         st.success(f'✅ Extracted Job Keywords: `{clean_keywords}`')
 
         with st.spinner('Fetching jobs from Google Job Agent...'):
-            GoogleJobAgent_jobs = getdata_from_GoogleJob(keywords=clean_keywords)
-            googleAI_jobs = getdata_from_JobScan_AI(keywords=clean_keywords)
+            GoogleJobAgent_jobs = fetch_linkedin_jobs(keywords=clean_keywords)
+            googleAI_jobs = fetch_naukri_jobs(keywords=clean_keywords)
 
         #Display LinkedIn Jobs
         st.markdown("----")

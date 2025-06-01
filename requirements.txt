@@ -6,3 +6,4 @@ apify-client
 python-dotenv
 PyMuPDF
 langchain
+euriai

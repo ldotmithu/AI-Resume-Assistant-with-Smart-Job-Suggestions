@@ -1,88 +1,60 @@
-import fitz 
-import os 
-from groq import Groq
-from apify_client import ApifyClient
+import streamlit as st
+import fitz  # PyMuPDF
+import os
+from euriai import EuriaiClient
 from dotenv import load_dotenv
+from apify_client import ApifyClient
+
+# Load environment variables
 load_dotenv()
 
-GROQ_API_KEY = os.getenv('GROQ_API_KEY')
-APIFY_API_KEY = os.getenv('APIFY_API_KEY')
+# Initialize clients
+euriai_client = EuriaiClient(
+    api_key=os.getenv("EURI_API_KEY"),
+    model="gpt-4.1-nano"
+)
 
-client = Groq(api_key=GROQ_API_KEY
-           )
+apify_client = ApifyClient(os.getenv("APIFY_API_KEY"))
 
-def read_pdf_extract_text(pdf_file):
-    file = fitz.open(stream = pdf_file.read(),filetype = "pdf")
+# Extract text from uploaded PDF
+def extract_text_from_pdf(uploaded_file):
+    doc = fitz.open(stream=uploaded_file.read(), filetype="pdf")
     text = ""
-    for page in file:
+    for page in doc:
         text += page.get_text()
-    return text  
+    return text
 
-def ask_llm(prompt):
-    responce = client.chat.completions.create(
-        messages =[{
-            'role':'user','content': prompt
+# Ask EURI AI to generate output
+def ask_llm(prompt, max_tokens=500):
+    response = euriai_client.generate_completion(prompt=prompt, temperature=0.5, max_tokens=max_tokens)
+    if isinstance(response, dict) and 'choices' in response:
+        return response['choices'][0]['message']['content']
+    return response
+
+# Fetch LinkedIn Jobs using Apify
+def fetch_linkedin_jobs(keywords, location="SriLanka", rows=60):
+    run_input = {
+        "title": keywords,
+        "location": location,
+        "rows": rows,
+        "proxy": {
+            "useApifyProxy": True,
+            "apifyProxyGroups": ["RESIDENTIAL"],
         }
-        ],
-        temperature=0.5,
-        max_tokens=500,
-        model = 'llama3-70b-8192'
-    )
-    return responce.choices[0].message.content
-
-def getdata_from_GoogleJob(keywords,location='SriLanka',row=10):
-    client = ApifyClient(APIFY_API_KEY)
-    
-    run_input = {
-        "startUrls": [
-            "https://www.google.com/search?q=Software+Engineer+jobs+in+Sri+Lanka&ibp=htl;jobs"
-        ],
-        "maxItems": 5,
-        "endPage": 1,
-        "queries": [keywords],  # Can customize based on your input
-        "countryCode": "lk",  # ISO 3166-1 Alpha-2 for Sri Lanka
-        "languageCode": "en",
-        "locationUule": "w+CAIQICIZU2lyaSBMYW5rYSwgU3JpIExhbmth",  # uule for "Sri Lanka"
-        "radius": 100,
-        "includeUnfilteredResults": False,
-        "csvFriendlyOutput": True,
-        "extendOutputFunction": "($) => { return {} }",
-        "customMapFunction": "(object) => { return {...object} }",
-        "proxy": { "useApifyProxy": True },
     }
-
-    run = client.actor("nopnOEWIYjLQfBqEO").call(run_input=run_input)
-    jobs = client.dataset(run["defaultDatasetId"]).iterate_items()
+    run = apify_client.actor("BHzefUZlZRKWxkTck").call(run_input=run_input)
+    jobs = list(apify_client.dataset(run["defaultDatasetId"]).iterate_items())
     return jobs
 
-def getdata_from_JobScan_AI(keywords,max_jobs = 60,location="Colombo, Sri Lanka"):
-    client = ApifyClient(APIFY_API_KEY)
-    
+# Fetch Naukri Jobs using Apify
+def fetch_naukri_jobs(keywords, max_jobs=60):
     run_input = {
-    "optional_keywords": [keywords],
-    "mandatory_keywords": [
-        "Remote",
-        "Full-time",
-    ],
-    "search_sites": [
-        "boards.greenhouse.io",
-        "jobs.lever.co",
-        "myworkdayjobs.com",
-        "careers.smartrecruiters.com",
-        "jobs.jobvite.com",
-        "careers.icims.com",
-        "angel.co",
-        "stackoverflow.com/jobs",
-        "weworkremotely.com",
-        "remotive.io",
-        "bamboohr.com",
-        "https://www.linkedin.com/jobs",
-    ],
-    "days_to_search": 30,
-    "result_limit": 10,
-}
-    run = client.actor("VHwSS0ICULitPHsUh").call(run_input=run_input)
-    jobs = client.dataset(run["defaultDatasetId"]).iterate_items()
+        "keyword": keywords,
+        "maxJobs": 60,
+        "freshness": "all",
+        "sortBy": "relevance",
+        "experience": "all",
+    }
+    run = apify_client.actor("alpcnRV9YI9lYVPWk").call(run_input=run_input)
+    jobs = list(apify_client.dataset(run["defaultDatasetId"]).iterate_items())
     return jobs
-    
-  
